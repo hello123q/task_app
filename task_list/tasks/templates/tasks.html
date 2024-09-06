@@ -47,7 +47,7 @@
     
     </div>
 <p id="totalCount" style="display: none; text-align: center; font-size: 22px; font-weight: 600;">Total Tasks: {{ count }}</p>
-
+<h5 style="color: red;"><span>* </span>Due tasks are highlighted</h5>
 
 
 {% if tasks %}
@@ -61,11 +61,21 @@
         </thead>
         <tbody id="taskTableBody">
             {% for task in tasks %}
-            <tr>
-                <td>{{ task.title }}</td>
-                <td>{{ task.due_date }}</td>
-                <td>{{ task.category }}</td>
-            </tr>
+            {% if task.remind %}
+
+            <tr style="background-color: red;">
+                        <td>{{ task.title }}</td>
+                        <td>{{ task.due_date }}</td>
+                        
+                        <td>{{ task.category }}</td>
+                    </tr>
+                {%else%}
+                <tr>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.due_date }}</td>
+                    <td>{{ task.category }}</td>
+                </tr>
+                {%endif%}
             {% endfor %}
         </tbody>
     </table>
@@ -112,13 +122,22 @@
                     // Update the table body with new data
                     let tableBody = document.getElementById('taskTableBody');
                     tableBody.innerHTML = '';  // Clear the existing table rows
-
                     data.tasks.forEach(task => {
-                        let row = `<tr>
+                        console.log("hhhh: ",task.remind)
+                        if(task.remind){
+                            row = `<tr>
                             <td>${task.title}</td>
                             <td>${task.due_date}</td>
                             <td>${task.category || 'None'}</td>
                         </tr>`;
+                        }
+                        else{
+                            row = `<tr style='background-color: red;'>
+                            <td>${task.title}</td>
+                            <td>${task.due_date}</td>
+                            <td>${task.category || 'None'}</td>
+                        </tr>`;
+                        }
                         tableBody.innerHTML += row;
                     });
 
@@ -159,7 +178,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 if (data.success) {
                     alert('Task added successfully!');
                     window.location.reload();  // Reload the page to update the task list
@@ -198,11 +216,25 @@
                     tableBody.innerHTML = '';  // Clear the existing table rows
 
                     data.tasks.forEach(task => {
-                        let row = `<tr>
+                        if(task.remind){
+                            row = `<tr>
                             <td>${task.title}</td>
                             <td>${task.due_date}</td>
                             <td>${task.category || 'None'}</td>
                         </tr>`;
+                        }
+                        else{
+                            row = `<tr style='background-color: red;'>
+                            <td>${task.title}</td>
+                            <td>${task.due_date}</td>
+                            <td>${task.category || 'None'}</td>
+                        </tr>`;
+                        }
+                        // let row = `<tr>
+                        //     <td>${task.title}</td>
+                        //     <td>${task.due_date}</td>
+                        //     <td>${task.category || 'None'}</td>
+                        // </tr>`;
                         tableBody.innerHTML += row;
                     });
 

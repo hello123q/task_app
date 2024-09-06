@@ -1,4 +1,5 @@
 # tasks/views.py
+import datetime
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework import status
@@ -85,6 +86,11 @@ class TaskListCreateAPIView(APIView):
         if len(serializer.data) == 0:
             return render(request, 'tasks.html', {'tasks': 'No tasks for you. Please add one', 'count': len(tasks)})
         else:
+            for val in data:
+                val['remind'] = False
+                if val['due_date'] == datetime.datetime.now().date().strftime('%Y-%m-%d'):
+                    val['remind'] = True
+
             return render(request, "tasks.html", {'tasks': data, 'count': len(tasks), 'success': True})
 
     def post(self, request):
@@ -175,7 +181,11 @@ class TaskSearch(APIView):
 
         serializer = TaskSerializer(tasks, many=True)
         data = serializer.data
-
+        if data:
+            for val in data:
+                val['remind'] = False
+                if val['due_date'] == datetime.datetime.now().date().strftime('%Y-%m-%d'):
+                    val['remind'] = True
         return JsonResponse({'tasks': data, 'success': True, 'count': len(data)})
 
         # print(data)
