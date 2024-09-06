@@ -78,7 +78,7 @@ class TaskListCreateAPIView(APIView):
         token = request.COOKIES.get("auth_token")
         user = Token.objects.get(key=token).user
 
-        tasks = Task.objects.filter(user=user).order_by('due_date')
+        tasks = Task.objects.filter(user=user).order_by('-due_date')
         serializer = TaskSerializer(tasks, many=True)
         data = serializer.data
 
@@ -166,6 +166,7 @@ class TaskSearch(APIView):
         search_sort = request.GET.get('search_sort')
         search_sort = search_sort if search_sort else 'due_date'
         print("INSIDE: ", title, search_sort)
+        search_sort = f'-{search_sort}'
         
         if title:
             tasks = Task.objects.filter(title__icontains=title, user=user).order_by(search_sort)
