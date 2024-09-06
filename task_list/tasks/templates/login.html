@@ -20,7 +20,11 @@
 <script>
     const success = "{{success}}"
     const message = "{{message}}"
-    if(success){
+    console.log("msg:", message)
+    if(message.length == 0){
+        console.log()
+    }
+    else if(success){
         alert(message)
         window.location.href = "/tasks"
     }
