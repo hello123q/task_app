@@ -1,0 +1,22 @@
+<!-- templates/register.html -->
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+ <div>
+ <!-- <div>trstt</div> -->
+<h2 id="register_h2" style="display: flex; justify-content: center;">Register</h2>
+
+<form method="post" action="{% url 'register' %}">
+    {% csrf_token %}
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    
+    <button type="submit">Register</button>
+</form>
+</div>
+{% endblock %}

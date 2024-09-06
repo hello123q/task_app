@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tasks{% endblock %}
+
+{% block content %}
+<div>
+<h2 style="display: flex; justify-content: center; font-size: 22px;">My Tasks</h2>
+<form method="post" id="taskForm" action="{% url 'tasks' %}" style="display: flex; gap: 20px;">
+    {% csrf_token %}
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required>
+    
+    <label for="due_date">Due Date:</label>
+    <input type="date" id="due_date" name="due_date" required>
+
+    <label for="category">Category:</label>
+    <input type="text" id="category" name="category">
+    
+    <button type="submit" id="my_tasks">Add Task</button>
+</form>
+<h3 style="display: flex; justify-content: center; font-size: 22px;">Search Tasks</h3>
+
+<div>
+<form method="get" id="searchForm" style="display: flex; gap: 20px;">
+    <label for="search_title" style="width: 33%;">Search by Title:</label>
+    <input type="search" id="search_title" name="title">
+    <button type="submit">Search</button>
+<button id="countButton">Get Total Tasks Count</button>
+
+</form>
+
+</div>
+
+
+<div>
+    <form method="get" id="searchFilter" style="display: flex; gap: 20px;">
+        <label for="search_title" style="width:9%;">Sort By:</label>
+        <!-- <input type="search" id="search_title" name="title"> -->
+        <select style="width: 20%;" id="search_box">
+            <option value="due_date">Due date</option>
+            <option value="title">Title</option>
+        </select>
+        <button type="submit" style="width: 20%;">Filter</button>
+    <!-- <button id="countButton">Get Total Tasks Count</button> -->
+    
+    </form>
+    
+    </div>
+<p id="totalCount" style="display: none; text-align: center; font-size: 22px; font-weight: 600;">Total Tasks: {{ count }}</p>
+
+
+
+{% if tasks %}
+    <table>
+        <thead>
+            <tr>
+                <th><a href="?order_by=title">Title</a></th>
+                <th><a href="?order_by=due_date">Due Date</a></th>
+                <th><a href="?order_by=category">Category</a></th>
+            </tr>
+        </thead>
+        <tbody id="taskTableBody">
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.title }}</td>
+                <td>{{ task.due_date }}</td>
+                <td>{{ task.category }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No tasks for you. Please add one.</p>
+{% endif %}
+
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var token = document.cookie.split(";").find(cookie => cookie.trim().startsWith("auth_token="))?.split("=")[1];
+
+        if (!token) {
+            console.error('Auth token not found in cookies.');
+            return;
+        }
+        
+        // Handle form submission for adding tasks with JavaScript
+        document.getElementById('searchFilter').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+                        // Get search input value
+            const search_box = document.getElementById('search_box').value;
+            const title = document.getElementById('search_title').value;
+
+            // Construct the URL with query parameters for search
+            const url = new URL("{% url 'search_tasks' %}", window.location.origin);
+            url.searchParams.append('search_sort', search_box);
+            url.searchParams.append('title', title);
+
+
+            // Prepare the GET request
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'token ' + token,  // Include token in the Authorization header
+                    'Content-Type': 'application/json', // Ensure JSON headers are set
+                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token in the headers
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.success) {
+                    // Update the table body with new data
+                    let tableBody = document.getElementById('taskTableBody');
+                    tableBody.innerHTML = '';  // Clear the existing table rows
+
+                    data.tasks.forEach(task => {
+                        let row = `<tr>
+                            <td>${task.title}</td>
+                            <td>${task.due_date}</td>
+                            <td>${task.category || 'None'}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+
+                    // Update the total count
+                    document.getElementById('totalCount').textContent = 'Total Tasks: ' + data.count;
+                    // document.getElementById('totalCount').style.display = "block";
+
+                    // document.getElementById('totalCount').style.display = "block";
+                } else {
+                    alert('Failed to search tasks: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+        });
+        // Handle form submission for adding tasks with JavaScript
+        document.getElementById('taskForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Get form data
+            const title = document.getElementById('title').value;
+            const due_date = document.getElementById('due_date').value;
+            const category = document.getElementById('category').value;
+
+            // Prepare the POST request
+            fetch("{% url 'tasks' %}", {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Token ' + token,  // Include token in the Authorization header
+                    'Content-Type': 'application/json', // Send data as JSON
+                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token in the headers
+                },
+                body: JSON.stringify({  // Send form data as JSON
+                    'title': title,
+                    'due_date': due_date,
+                    'category': category
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.success) {
+                    alert('Task added successfully!');
+                    window.location.reload();  // Reload the page to update the task list
+                } else {
+                    alert('Failed to add task: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Handle form submission for searching tasks with JavaScript
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Get search input value
+            const title = document.getElementById('search_title').value;
+            // Construct the URL with query parameters for search
+            const url = new URL("{% url 'search_tasks' %}", window.location.origin);
+            url.searchParams.append('title', title);
+
+            // Prepare the GET request
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + token,  // Include token in the Authorization header
+                    'Content-Type': 'application/json', // Ensure JSON headers are set
+                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token in the headers
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.success) {
+                    // Update the table body with new data
+                    let tableBody = document.getElementById('taskTableBody');
+                    tableBody.innerHTML = '';  // Clear the existing table rows
+
+                    data.tasks.forEach(task => {
+                        let row = `<tr>
+                            <td>${task.title}</td>
+                            <td>${task.due_date}</td>
+                            <td>${task.category || 'None'}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+
+                    // Update the total count
+                    document.getElementById('totalCount').textContent = 'Total Tasks: ' + data.count;
+                    // document.getElementById('totalCount').style.display = "block";
+                } else {
+                    alert('Failed to search tasks: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Handle button click to get total tasks count
+        document.getElementById('countButton').addEventListener('click', function() {
+            const url = new URL("{% url 'search_tasks' %}", window.location.origin);
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Token ' + token,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('totalCount').style.display = 'block';
+                    document.getElementById('totalCount').textContent = 'Total Tasks: ' + data.count;
+                } else {
+                    alert('Failed to get task count: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+</script>
+{% endblock %}

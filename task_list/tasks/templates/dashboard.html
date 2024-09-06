@@ -1,0 +1,52 @@
+<!-- templates/task_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}My Tasks{% endblock %}
+
+{% block content %}
+<h2>My Tasks</h2>
+<form method="post" action="{% url 'add_task' %}">
+    {% csrf_token %}
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required>
+    
+    <label for="due_date">Due Date:</label>
+    <input type="date" id="due_date" name="due_date" required>
+    
+    <button type="submit">Add Task</button>
+</form>
+
+<h3>Search Tasks</h3>
+<form method="get" action="{% url 'task_list' %}">
+    <label for="search_title">Search by Title:</label>
+    <input type="text" id="search_title" name="title">
+    <button type="submit">Search</button>
+</form>
+
+{% if tasks %}
+    <table>
+        <thead>
+            <tr>
+                <th><a href="?order_by=title">Title</a></th>
+                <th><a href="?order_by=due_date">Due Date</a></th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.title }}</td>
+                <td>{{ task.due_date }}</td>
+                <td>
+                    <a href="{% url 'task_detail' task.id %}">Edit</a>
+                    <a href="{% url 'task_delete' task.id %}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p>Total Tasks: {{ count }}</p>
+{% else %}
+    <p>No tasks for you. Please add one.</p>
+{% endif %}
+{% endblock %}
