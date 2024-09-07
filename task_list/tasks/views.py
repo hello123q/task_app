@@ -61,7 +61,7 @@ class LoginAPIView(APIView):
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
             print("token: ", token)
-            respon = render(request, 'login.html', {"message": "Login successfull", "success": True})
+            respon = render(request, 'login.html', {"message": "Login successful", "success": True})
             respon.set_cookie(key='auth_token', value=token)
             return respon
             # Pass token to the template context
