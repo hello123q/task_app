@@ -11,11 +11,12 @@ from .models import Task
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django.template import loader
-from .serializers import UserSerializer, TaskSerializer, TokenSerializer
+from .serializers import UserSerializer, TaskSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 
+total_count = None
 def registerfunc(request):
     return HttpResponse(request, 'templates/register.html')
 
@@ -49,10 +50,13 @@ class LoginAPIView(APIView):
     authentication_classes = [TokenAuthentication]
 
     def get(self, request):
+        global total_count
+        total_count = None
         # template = loader.get_template("register.html")
         return render(request, 'login.html')
 
     def post(self, request):
+        global total_count
         username = request.data.get('username')
         password = request.data.get('password')
 
@@ -61,6 +65,7 @@ class LoginAPIView(APIView):
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
             print("token: ", token)
+            total_count = None
             respon = render(request, 'login.html', {"message": "Login successful", "success": True})
             respon.set_cookie(key='auth_token', value=token)
             return respon
@@ -76,6 +81,8 @@ class TaskListCreateAPIView(APIView):
     authentication_classes = [TokenAuthentication]
 
     def get(self, request):
+        global total_count
+
         token = request.COOKIES.get("auth_token")
         user = Token.objects.get(key=token).user
 
@@ -90,10 +97,12 @@ class TaskListCreateAPIView(APIView):
                 val['remind'] = False
                 if val['due_date'] == datetime.datetime.now().date().strftime('%Y-%m-%d'):
                     val['remind'] = True
-
-            return render(request, "tasks.html", {'tasks': data, 'count': len(tasks), 'success': True})
+            if total_count == None:
+                total_count = len(tasks)
+            return render(request, "tasks.html", {'tasks': data, 'count': total_count, 'success': True})
 
     def post(self, request):
+        global total_count
         user = request.user
         if user.is_authenticated:
             print(user)
@@ -105,6 +114,7 @@ class TaskListCreateAPIView(APIView):
                 serializer.save(user=user)
                 data = serializer.data
                 data["success"] = True
+                total_count = len(data)
                 return Response(data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -164,8 +174,9 @@ class TaskListCreateAPIView(APIView):
 class TaskSearch(APIView):
     permission_classes = [AllowAny]
     authentication_classes = [TokenAuthentication]
-
     def get(self, request):
+        global total_count
+
         token = request.COOKIES.get("auth_token")
         user = Token.objects.get(key=token).user
         title = request.GET.get('title')
@@ -181,12 +192,14 @@ class TaskSearch(APIView):
 
         serializer = TaskSerializer(tasks, many=True)
         data = serializer.data
+        total_count = len(data)
+
         if data:
             for val in data:
                 val['remind'] = False
                 if val['due_date'] == datetime.datetime.now().date().strftime('%Y-%m-%d'):
                     val['remind'] = True
-        return JsonResponse({'tasks': data, 'success': True, 'count': len(data)})
+        return JsonResponse({'tasks': data, 'success': True, 'count': total_count})
 
         # print(data)
         # if len(serializer.data) == 0:
