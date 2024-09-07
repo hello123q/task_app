@@ -26,6 +26,7 @@
     <input type="search" id="search_title" name="title">
     <button type="submit">Search</button>
 <button id="countButton">Get Total Tasks Count</button>
+<p id="totalCount" style="display: none; text-align: center; font-size: 22px; font-weight: 600;">Total Tasks: {{ count }}</p>
 
 </form>
 
@@ -46,7 +47,6 @@
     </form>
     
     </div>
-<p id="totalCount" style="display: none; text-align: center; font-size: 22px; font-weight: 600;">Total Tasks: {{ count }}</p>
 <h5 style="color: red;"><span>* </span>Today's due tasks are highlighted</h5>
 
 
@@ -248,28 +248,40 @@
             .catch(error => console.error('Error:', error));
         });
 
+        let isCountVisible = false;
+        console.log("oneone", isCountVisible);
         // Handle button click to get total tasks count
         document.getElementById('countButton').addEventListener('click', function() {
-            const url = new URL("{% url 'search_tasks' %}", window.location.origin);
 
-            fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Token ' + token,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('totalCount').style.display = 'block';
-                    document.getElementById('totalCount').textContent = 'Total Tasks: ' + data.count;
-                } else {
-                    alert('Failed to get task count: ' + data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
+            if (!isCountVisible) {
+                const url = new URL("{% url 'search_tasks' %}", window.location.origin);
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Token ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('totalCount').style.display = 'block';
+                        document.getElementById('totalCount').textContent = 'Total Tasks: ' + data.count;
+                        isCountVisible = true; 
+                    } else {
+                        alert('Failed to get task count: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        else{
+            document.getElementById('totalCount').style.display = 'none';
+            isCountVisible = false; // Update the flag
+
+        }
+        console.log(isCountVisible);
+    });
     });
 </script>
 {% endblock %}
