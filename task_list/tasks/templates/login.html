@@ -5,31 +5,32 @@
 
 {% block content %}
 <div>
-<h2 style="display: flex; justify-content: center;">Login</h2>
-<form method="post" action="{% url 'login' %}" id="login-form">
-    {% csrf_token %}
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
-    
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
-    
-    <button type="submit">Login</button>
-</form>
+    <h2 style="display: flex; justify-content: center;">Login</h2>
+    <form method="post" action="{% url 'login' %}" id="login-form">
+        {% csrf_token %}
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        
+        <button type="submit">Login</button>
+        <p style="text-align: center; margin-top: 10px;">
+            New user? <a href="{% url 'register' %}" style="font-size: 0.9em; color: #007bff; text-decoration: none;">Register here</a>
+        </p>
+    </form>
 </div>
 <script>
-    const success = "{{success}}"
-    const message = "{{message}}"
-    console.log("msg:", message)
-    if(message.length == 0){
-        console.log()
-    }
-    else if(success){
-        alert(message)
-        window.location.href = "/tasks"
-    }
-    else{
-        alert(message)
+    const success = "{{success}}";
+    const message = "{{message}}";
+    console.log("msg:", message);
+    if (message.length === 0) {
+        console.log();
+    } else if (success) {
+        alert(message);
+        window.location.href = "/tasks";
+    } else {
+        alert(message);
     }
 </script>
 {% endblock %}

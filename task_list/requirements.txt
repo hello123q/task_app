@@ -1,0 +1,8 @@
+asgiref
+Django
+djangorestframework
+python-decouple
+sqlparse
+typing_extensions
+gunicorn
+whitenoise
